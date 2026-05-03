@@ -1,0 +1,10 @@
+{
+  "name": "Liedjes",
+  "short_name": "Liedjes",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff7e6",
+  "theme_color": "#fff7e6"
+}

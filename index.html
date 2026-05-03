@@ -6,16 +6,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Liedjes">
 <meta name="theme-color" content="#fff7e6">
+<link rel="manifest" href="manifest.json">
 <title>Liedjes</title>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;          /* allow vertical scroll, block pinch */
+  }
   html, body {
     margin: 0;
     padding: 0;
     background: #fff7e6;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Avenir Next", system-ui, sans-serif;
     overscroll-behavior: none;
-    touch-action: manipulation;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
   }
   body {
     min-height: 100vh;
@@ -124,6 +133,33 @@
   <div class="stopbar" id="stopbar"><button class="stopbtn" id="stopbtn">Stop</button></div>
 
 <script>
+// --- Toddler-proofing: kill all browser gestures ---
+// 1. Block iOS Safari pinch-zoom gestures completely
+document.addEventListener("gesturestart", e => e.preventDefault(), { passive: false });
+document.addEventListener("gesturechange", e => e.preventDefault(), { passive: false });
+document.addEventListener("gestureend", e => e.preventDefault(), { passive: false });
+
+// 2. Block double-tap-to-zoom (only fire click on single-tap)
+let lastTouchEnd = 0;
+document.addEventListener("touchend", e => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 350) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+// 3. If more than one finger touches, cancel the touch — prevents palm + finger
+//    triggering pinch / weird states
+document.addEventListener("touchstart", e => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+document.addEventListener("touchmove", e => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+// 4. Block context menu / long-press callout
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("dblclick", e => e.preventDefault());
+
 const songs = [
   { n: 1,  title: "Alle Eendjes",              file: "2019/04/01-Alle-EenDJes.mp3" },
   { n: 2,  title: "Parapluutje",               file: "2019/04/02-Parapluutje.mp3" },
@@ -185,6 +221,68 @@ audio.addEventListener("ended", () => setPlaying(null));
 
 const grid = document.getElementById("grid");
 
+// Palm rejection settings:
+//  - radius threshold: a fingertip is roughly < 25px radius on iPad. A palm
+//    or knuckle is wider. We err on the side of letting fingertips through.
+//  - duration: a tap is fast (< 800ms). A resting palm tends to stay much
+//    longer; if a touch lasts beyond this we ignore the eventual touchend.
+//  - movement: if the touch slides far, it's a drag, not a tap.
+const PALM_RADIUS_PX = 28;
+const MAX_TAP_MS = 800;
+const MAX_TAP_DRIFT_PX = 30;
+
+function attachTileHandlers(btn, song) {
+  const candidates = new Map(); // touchId -> {t0, x0, y0}
+
+  btn.addEventListener("touchstart", e => {
+    for (const t of e.changedTouches) {
+      const r = Math.max(t.radiusX || 0, t.radiusY || 0);
+      if (r > PALM_RADIUS_PX) continue; // looks like palm; skip
+      candidates.set(t.identifier, { t0: Date.now(), x0: t.clientX, y0: t.clientY });
+    }
+  }, { passive: true });
+
+  btn.addEventListener("touchmove", e => {
+    for (const t of e.changedTouches) {
+      const c = candidates.get(t.identifier);
+      if (!c) continue;
+      if (Math.hypot(t.clientX - c.x0, t.clientY - c.y0) > MAX_TAP_DRIFT_PX) {
+        candidates.delete(t.identifier);
+      }
+    }
+  }, { passive: true });
+
+  btn.addEventListener("touchend", e => {
+    for (const t of e.changedTouches) {
+      const c = candidates.get(t.identifier);
+      candidates.delete(t.identifier);
+      if (!c) continue;
+      if (Date.now() - c.t0 > MAX_TAP_MS) continue;
+      const r = Math.max(t.radiusX || 0, t.radiusY || 0);
+      if (r > PALM_RADIUS_PX) continue;
+      // confirm touch ended over the same tile
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      if (el === btn || btn.contains(el)) {
+        e.preventDefault();
+        play(song, btn);
+        return;
+      }
+    }
+  }, { passive: false });
+
+  btn.addEventListener("touchcancel", e => {
+    for (const t of e.changedTouches) candidates.delete(t.identifier);
+  }, { passive: true });
+
+  // Desktop fallback (mouse clicks). On iOS Safari, click is suppressed when
+  // touchend already played; e.detail === 0 also filters out programmatic clicks.
+  btn.addEventListener("click", e => {
+    if ("ontouchstart" in window) return; // touch device handled via touchend
+    if (e.detail === 0) return;
+    play(song, btn);
+  });
+}
+
 function build() {
   songs.forEach((s) => {
     const btn = document.createElement("button");
@@ -198,7 +296,7 @@ function build() {
       ? `<img src="icons/${key}.jpg" alt="">`
       : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:clamp(48px,9vw,90px);font-weight:900;">${s.n}</div>`)
       + `<div class="num">${s.n}</div>`;
-    btn.addEventListener("click", () => play(s, btn));
+    attachTileHandlers(btn, s);
     grid.appendChild(btn);
   });
 }
