@@ -298,7 +298,7 @@ const grid = document.getElementById("grid");
 
 // Tap detection tuned for a 19-month-old + accidental brush rejection.
 // iOS reports radiusX/radiusY unreliably (often 0), so we don't rely on it.
-const MIN_TAP_MS = 80;            // ignore brushes shorter than this (pickup grazes)
+const MIN_TAP_MS = 65;            // ignore brushes shorter than this (pickup grazes)
 const MAX_TAP_MS = 1500;          // ignore long holds (palm resting)
 const MAX_TAP_DRIFT_PX = 50;      // ignore drags
 
