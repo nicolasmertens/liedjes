@@ -82,6 +82,10 @@
     letter-spacing: -0.02em;
     pointer-events: none;
   }
+  .tile.pressing {
+    transform: scale(0.94);
+    filter: brightness(1.12);
+  }
   .tile.playing {
     border-color: #ff6b6b;
     animation: pulse 1.2s ease-in-out infinite;
@@ -131,11 +135,25 @@
     box-shadow: 0 4px 0 rgba(0,0,0,0.18), 0 10px 20px rgba(0,0,0,0.15);
   }
   .stopbtn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+  #debug {
+    position: fixed;
+    top: 8px; right: 8px;
+    max-width: 60vw;
+    padding: 8px 10px;
+    background: rgba(0,0,0,0.78);
+    color: #b6f7c1;
+    font: 11px/1.4 ui-monospace, Menlo, monospace;
+    white-space: pre;
+    border-radius: 8px;
+    z-index: 9999;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
   <main class="grid" id="grid"></main>
   <div class="stopbar" id="stopbar"><button class="stopbtn" id="stopbtn">Stop</button></div>
+  <pre id="debug" hidden></pre>
 
 <script>
 // --- Service worker: auto-update HTML on next visit, offline fallback ---
@@ -233,24 +251,34 @@ audio.addEventListener("ended", () => setPlaying(null));
 
 const grid = document.getElementById("grid");
 
-// Palm rejection settings:
-//  - radius threshold: a fingertip is roughly < 25px radius on iPad. A palm
-//    or knuckle is wider. We err on the side of letting fingertips through.
-//  - duration: a tap is fast (< 800ms). A resting palm tends to stay much
-//    longer; if a touch lasts beyond this we ignore the eventual touchend.
-//  - movement: if the touch slides far, it's a drag, not a tap.
-const PALM_RADIUS_PX = 28;
-const MAX_TAP_MS = 800;
-const MAX_TAP_DRIFT_PX = 30;
+// Tap detection tuned for a 19-month-old + accidental brush rejection.
+// iOS reports radiusX/radiusY unreliably (often 0), so we don't rely on it.
+const MIN_TAP_MS = 80;            // ignore brushes shorter than this (pickup grazes)
+const MAX_TAP_MS = 1500;          // ignore long holds (palm resting)
+const MAX_TAP_DRIFT_PX = 50;      // ignore drags
+
+const DEBUG = new URLSearchParams(location.search).has("debug");
+if (DEBUG) {
+  document.addEventListener("DOMContentLoaded", () => {
+    const el = document.getElementById("debug");
+    if (el) el.hidden = false;
+  });
+}
+const debugLog = (...args) => {
+  if (!DEBUG) return;
+  const el = document.getElementById("debug");
+  if (!el) return;
+  const line = args.join(" ");
+  el.textContent = (line + "\n" + el.textContent).split("\n").slice(0, 12).join("\n");
+};
 
 function attachTileHandlers(btn, song) {
   const candidates = new Map(); // touchId -> {t0, x0, y0}
 
   btn.addEventListener("touchstart", e => {
     for (const t of e.changedTouches) {
-      const r = Math.max(t.radiusX || 0, t.radiusY || 0);
-      if (r > PALM_RADIUS_PX) continue; // looks like palm; skip
       candidates.set(t.identifier, { t0: Date.now(), x0: t.clientX, y0: t.clientY });
+      btn.classList.add("pressing");
     }
   }, { passive: true });
 
@@ -260,6 +288,8 @@ function attachTileHandlers(btn, song) {
       if (!c) continue;
       if (Math.hypot(t.clientX - c.x0, t.clientY - c.y0) > MAX_TAP_DRIFT_PX) {
         candidates.delete(t.identifier);
+        if (candidates.size === 0) btn.classList.remove("pressing");
+        debugLog(`#${song.n} drift cancel`);
       }
     }
   }, { passive: true });
@@ -268,28 +298,31 @@ function attachTileHandlers(btn, song) {
     for (const t of e.changedTouches) {
       const c = candidates.get(t.identifier);
       candidates.delete(t.identifier);
+      if (candidates.size === 0) btn.classList.remove("pressing");
       if (!c) continue;
-      if (Date.now() - c.t0 > MAX_TAP_MS) continue;
+      const dur = Date.now() - c.t0;
       const r = Math.max(t.radiusX || 0, t.radiusY || 0);
-      if (r > PALM_RADIUS_PX) continue;
-      // confirm touch ended over the same tile
       const el = document.elementFromPoint(t.clientX, t.clientY);
-      if (el === btn || btn.contains(el)) {
-        e.preventDefault();
-        play(song, btn);
-        return;
-      }
+      const onTile = el === btn || btn.contains(el);
+      debugLog(`#${song.n} dur=${dur}ms r=${r.toFixed(0)} onTile=${onTile}`);
+      if (dur < MIN_TAP_MS) continue;
+      if (dur > MAX_TAP_MS) continue;
+      if (!onTile) continue;
+      e.preventDefault();
+      play(song, btn);
+      return;
     }
   }, { passive: false });
 
   btn.addEventListener("touchcancel", e => {
     for (const t of e.changedTouches) candidates.delete(t.identifier);
+    if (candidates.size === 0) btn.classList.remove("pressing");
   }, { passive: true });
 
   // Desktop fallback (mouse clicks). On iOS Safari, click is suppressed when
-  // touchend already played; e.detail === 0 also filters out programmatic clicks.
+  // touchend already fired; e.detail === 0 also filters out programmatic clicks.
   btn.addEventListener("click", e => {
-    if ("ontouchstart" in window) return; // touch device handled via touchend
+    if ("ontouchstart" in window) return;
     if (e.detail === 0) return;
     play(song, btn);
   });
