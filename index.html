@@ -35,54 +35,52 @@
   @media (max-width: 560px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
   .tile {
     aspect-ratio: 1 / 1;
-    border: none;
+    border: 4px solid transparent;
     border-radius: 22px;
-    padding: 10px;
-    color: #fff;
+    padding: 0;
+    background: #fff;
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    overflow: hidden;
+    position: relative;
     box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 8px 18px rgba(0,0,0,0.08);
-    transition: transform .08s ease, box-shadow .08s ease, filter .15s ease;
+    transition: transform .08s ease, box-shadow .08s ease, border-color .15s ease;
     font-family: inherit;
   }
   .tile:active {
     transform: translateY(2px);
     box-shadow: 0 2px 0 rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08);
   }
-  .tile .num {
-    font-size: clamp(36px, 7vw, 64px);
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    text-shadow: 0 2px 0 rgba(0,0,0,0.12);
+  .tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
   }
-  .tile .title {
-    margin-top: 8px;
-    font-size: clamp(11px, 1.6vw, 15px);
-    font-weight: 700;
-    line-height: 1.15;
-    opacity: 0.97;
-    padding: 0 4px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+  .tile .num {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-size: clamp(20px, 2.4vw, 28px);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6), 0 0 2px rgba(0,0,0,0.8);
+    letter-spacing: -0.02em;
+    pointer-events: none;
   }
   .tile.playing {
+    border-color: #ff6b6b;
     animation: pulse 1.2s ease-in-out infinite;
-    filter: brightness(1.08);
   }
   .tile.playing::after {
     content: "";
-    width: 18px; height: 18px;
-    margin-top: 8px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 16px; height: 16px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 0 0 0 rgba(255,255,255,0.7);
+    background: #ff6b6b;
+    box-shadow: 0 0 0 0 rgba(255,107,107,0.7);
     animation: dot 1s ease-in-out infinite;
   }
   @keyframes pulse {
@@ -155,13 +153,10 @@ const songs = [
   { n:26,  title: "O, Wat Zijn We Heden Blij", file: "2019/04/26-O-Wat-Zijn-We-Heden-Blij.mp3" },
 ];
 
-const palette = [
-  "#ff6b6b", "#ffa94d", "#ffd43b", "#a9e34b", "#51cf66",
-  "#38d9a9", "#22b8cf", "#4dabf7", "#5c7cfa", "#845ef7",
-  "#cc5de8", "#f06595", "#ff8787", "#fab005",
-];
-
+const FALLBACK_COLOR = "#f06595";
 const BASE = "https://www.standaarduitgeverij.be/wp-content/uploads/";
+
+let colorMap = {};
 const audio = new Audio();
 audio.preload = "none";
 audio.playsInline = true;
@@ -189,14 +184,29 @@ function play(song, tile) {
 audio.addEventListener("ended", () => setPlaying(null));
 
 const grid = document.getElementById("grid");
-songs.forEach((s, i) => {
-  const btn = document.createElement("button");
-  btn.className = "tile";
-  btn.style.background = palette[i % palette.length];
-  btn.innerHTML = `<div class="num">${s.n}</div><div class="title">${s.title}</div>`;
-  btn.addEventListener("click", () => play(s, btn));
-  grid.appendChild(btn);
-});
+
+function build() {
+  songs.forEach((s) => {
+    const btn = document.createElement("button");
+    btn.className = "tile";
+    const key = String(s.n).padStart(2, "0");
+    const color = colorMap[key] || FALLBACK_COLOR;
+    btn.style.background = color;
+    btn.setAttribute("aria-label", `${s.n}. ${s.title}`);
+    const hasImg = colorMap[key] !== undefined;
+    btn.innerHTML = (hasImg
+      ? `<img src="icons/${key}.jpg" alt="">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:clamp(48px,9vw,90px);font-weight:900;">${s.n}</div>`)
+      + `<div class="num">${s.n}</div>`;
+    btn.addEventListener("click", () => play(s, btn));
+    grid.appendChild(btn);
+  });
+}
+
+fetch("icons/colors.json")
+  .then(r => r.ok ? r.json() : {})
+  .catch(() => ({}))
+  .then(m => { colorMap = m; build(); });
 
 document.getElementById("stopbtn").addEventListener("click", stop);
 </script>
