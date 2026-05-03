@@ -138,6 +138,13 @@
   <div class="stopbar" id="stopbar"><button class="stopbtn" id="stopbtn">Stop</button></div>
 
 <script>
+// --- Service worker: auto-update HTML on next visit, offline fallback ---
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
+}
+
 // --- Toddler-proofing: kill all browser gestures ---
 // 1. Block iOS Safari pinch-zoom gestures completely
 document.addEventListener("gesturestart", e => e.preventDefault(), { passive: false });
