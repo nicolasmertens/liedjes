@@ -13,7 +13,7 @@ fade). Verse end is the first inter-segment gap ≥ 1.3 s after at least
 | 02 | Hey Diddle Diddle              | Little Baby Bum      | sJiw-edttDY    | 25.00 | 75.00 |
 | 03 | Hickory Dickory Dock           | Super Simple Songs   | HGgsklW-mtg    |  4.64 | 24.60 |
 | 04 | Mary Had a Little Lamb         | Emma And Joey        | JR40Zr0y7Nw    |  7.00 | 63.00 |
-| 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  8.84 | 14.86 |
+| 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  8.84 | 11.86 |
 | 06 | The Itsy Bitsy Spider          | Twinkle Little Songs | w_lCi8U49mY    |  2.72 | 22.66 |
 | 07 | Jack and Jill                  | Super Simple Songs   | EFj0K38sPmA    |  6.38 | 18.86 |
 | 08 | Little Bo-Peep                 | Super Simple TV      | L8yYxqUvBKA    |  4.82 | 19.52 |
