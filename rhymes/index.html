@@ -40,10 +40,18 @@
   }
   .grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    max-width: 760px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    max-width: 1200px;
     margin: 0 auto;
+  }
+  /* Phones + iPad portrait: 2 columns × 5 rows for big tap targets */
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      max-width: 760px;
+    }
   }
   .tile {
     aspect-ratio: 1 / 1;
