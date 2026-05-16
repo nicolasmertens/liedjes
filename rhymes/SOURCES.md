@@ -10,7 +10,7 @@ nursery-rhyme video, downloaded via `yt-dlp` and re-encoded to 96 kbps mono mp3.
 | 03 | Hickory Dickory Dock           | Super Simple Songs   | HGgsklW-mtg    | 182 s           |
 | 04 | Mary Had a Little Lamb         | Super Simple Songs   | YE7PiTwhTQk    | 176 s           |
 | 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  79 s           |
-| 06 | The Itsy Bitsy Spider          | Super Simple Songs (titled "Eensy Weensy Spider") | bne3Ix_tJL8 | 143 s |
+| 06 | The Itsy Bitsy Spider          | Twinkle Little Songs | w_lCi8U49mY    | 117 s           |
 | 07 | Jack and Jill                  | Super Simple Songs   | EFj0K38sPmA    | 107 s           |
 | 08 | Little Bo-Peep                 | Super Simple TV      | L8yYxqUvBKA    | 115 s           |
 | 09 | There Was an Old Woman         | Little Baby Bum      | M3z5DeFQXgg    | 118 s           |
