@@ -3,8 +3,8 @@
 // same-origin so the default same-origin branch caches them after the page
 // sends a "prefetch-mp3s" message.
 
-const CORE_CACHE = "rhymes-v8";
-const MP3_CACHE  = "rhymes-mp3-v8";
+const CORE_CACHE = "rhymes-v9";
+const MP3_CACHE  = "rhymes-mp3-v9";
 
 const CORE = [
   "./",
@@ -99,23 +99,33 @@ self.addEventListener("message", async e => {
     if (e.source) e.source.postMessage(payload);
   };
 
-  for (const u of msg.urls) {
-    try {
-      const req = new Request(u, { mode: "no-cors", credentials: "omit" });
-      const existing = await cache.match(req, { ignoreVary: true });
-      if (!existing) {
-        const resp = await fetch(req);
-        await cache.put(req, resp);
+  // Parallel fetch with a small concurrency cap so home-WiFi pulls all 10
+  // mp3s in 1-2 s instead of 10 sequential round-trips. First URLs in the
+  // list are prioritized by popularity, so they start first.
+  const CONCURRENCY = 4;
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < total) {
+      const idx = cursor++;
+      const u = msg.urls[idx];
+      try {
+        const req = new Request(u, { mode: "no-cors", credentials: "omit" });
+        const existing = await cache.match(req, { ignoreVary: true });
+        if (!existing) {
+          const resp = await fetch(req);
+          await cache.put(req, resp);
+        }
         cached++;
-      } else {
-        cached++;
+      } catch (err) {
+        // Continue on failure — next song may still cache fine.
       }
-    } catch (err) {
-      // Continue on failure — next song may still cache fine.
+      done++;
+      post({ type: "prefetch-progress", done, total });
     }
-    done++;
-    post({ type: "prefetch-progress", done, total });
   }
+
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, worker));
 
   prefetching = false;
   post({ type: "prefetch-done", cached, total });

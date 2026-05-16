@@ -388,10 +388,8 @@ tel("session_start", {
 });
 
 async function schedulePrefetch() {
-  await new Promise(r => {
-    if ("requestIdleCallback" in window) requestIdleCallback(() => r(), { timeout: 3000 });
-    else setTimeout(r, 1500);
-  });
+  // Eager prefetch: kick off immediately after the SW is reachable. Home-WiFi
+  // can absorb ~4 MB of mp3s in 1-2 s; no need to wait for idle.
   let worker = navigator.serviceWorker.controller;
   if (!worker) {
     try {
