@@ -16,7 +16,7 @@ fade). Verse end is the first inter-segment gap ≥ 1.3 s after at least
 | 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  8.84 | 11.86 |
 | 06 | The Itsy Bitsy Spider          | Twinkle Little Songs | w_lCi8U49mY    |  2.72 | 22.66 |
 | 07 | Jack and Jill                  | Super Simple Songs   | EFj0K38sPmA    |  6.38 | 18.86 |
-| 08 | Little Bo-Peep                 | Super Simple TV      | L8yYxqUvBKA    |  4.82 | 19.52 |
+| 08 | Little Bo-Peep                 | Dave and Ava         | w0eJJUv9BEQ    | 55.00 | 29.00 |
 | 09 | There Was an Old Woman         | Little Baby Bum      | M3z5DeFQXgg    |  9.66 | 33.86 |
 | 10 | This Little Piggy              | Bounce Patrol        | 5bdTKxLAoos    | 28.00 | 26.16 |
 
@@ -32,14 +32,6 @@ fade). Verse end is the first inter-segment gap ≥ 1.3 s after at least
 
 ## Notes
 
-- **#08 (Little Bo-Peep, Super Simple TV)**: this is a *puppet playhouse
-  skit*, not a straight sung rhyme. The 19.5-second trim captures the
-  intro and first two book lines ("has lost her sheep / doesn't know
-  where to find them"). The closing book lines ("Leave them alone…
-  wagging their tails behind them") arrive ~45 s later in the video,
-  embedded in scripted puppet dialogue. Consider swapping to Mother Goose
-  Club (`fjN2qXGFp24`) or The Good and the Beautiful Kids
-  (`vNFCFmPSVVY`) for a straight-through rendition.
 - All 10 are commercial recordings used here on a single child's home
   tablet. Repo is public for telemetry tooling convenience — if
   redistribution becomes a concern, either flip the repo to private (GH
