@@ -3,8 +3,8 @@
 // same-origin so the default same-origin branch caches them after the page
 // sends a "prefetch-mp3s" message.
 
-const CORE_CACHE = "rhymes-v7";
-const MP3_CACHE  = "rhymes-mp3-v7";
+const CORE_CACHE = "rhymes-v8";
+const MP3_CACHE  = "rhymes-mp3-v8";
 
 const CORE = [
   "./",
