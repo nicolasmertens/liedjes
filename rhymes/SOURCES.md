@@ -1,26 +1,51 @@
 # Audio sources — rhymes/
 
-Each tile uses the first ~28 seconds (intro + first verse) of a YouTube
-nursery-rhyme video, downloaded via `yt-dlp` and re-encoded to 96 kbps mono mp3.
+Each tile is a YouTube nursery-rhyme video, downloaded via `yt-dlp` and
+re-encoded to 96 kbps mono mp3. Trim bounds (`start` + `dur` in seconds)
+were chosen via Whisper transcription: `start = first vocal word − 2 s`
+(pre-roll) and `dur = first natural verse-end − start + 0.6 s` (tail
+fade). Verse end is the first inter-segment gap ≥ 1.3 s after at least
+8 s of vocals.
 
-| # | Rhyme                          | Channel              | YouTube ID     | Duration (orig) |
-|---|--------------------------------|----------------------|----------------|-----------------|
-| 01 | Twinkle, Twinkle, Little Star  | Super Simple Songs   | yCjJyiqpAuU    | 154 s           |
-| 02 | Hey Diddle Diddle              | Sesame Street        | caRuhprYlOQ    |  57 s           |
-| 03 | Hickory Dickory Dock           | Super Simple Songs   | HGgsklW-mtg    | 182 s           |
-| 04 | Mary Had a Little Lamb         | Super Simple Songs   | YE7PiTwhTQk    | 176 s           |
-| 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  79 s           |
-| 06 | The Itsy Bitsy Spider          | Twinkle Little Songs | w_lCi8U49mY    | 117 s           |
-| 07 | Jack and Jill                  | Super Simple Songs   | EFj0K38sPmA    | 107 s           |
-| 08 | Little Bo-Peep                 | Super Simple TV      | L8yYxqUvBKA    | 115 s           |
-| 09 | There Was an Old Woman         | Little Baby Bum      | M3z5DeFQXgg    | 118 s           |
-| 10 | This Little Piggy              | Bounce Patrol        | 5bdTKxLAoos    | 119 s           |
+| # | Rhyme                          | Channel              | YouTube ID     | start | dur   |
+|---|--------------------------------|----------------------|----------------|-------|-------|
+| 01 | Twinkle, Twinkle, Little Star  | Super Simple Songs   | yCjJyiqpAuU    | 17.60 | 35.18 |
+| 02 | Hey Diddle Diddle              | Sesame Street        | caRuhprYlOQ    |  0.00 | 18.84 |
+| 03 | Hickory Dickory Dock           | Super Simple Songs   | HGgsklW-mtg    |  4.64 | 24.60 |
+| 04 | Mary Had a Little Lamb         | Super Simple Songs   | YE7PiTwhTQk    | 18.14 | 33.40 |
+| 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  8.84 | 14.86 |
+| 06 | The Itsy Bitsy Spider          | Twinkle Little Songs | w_lCi8U49mY    |  2.72 | 22.66 |
+| 07 | Jack and Jill                  | Super Simple Songs   | EFj0K38sPmA    |  6.38 | 18.86 |
+| 08 | Little Bo-Peep                 | Super Simple TV      | L8yYxqUvBKA    |  4.82 | 19.52 |
+| 09 | There Was an Old Woman         | Little Baby Bum      | M3z5DeFQXgg    |  9.66 | 33.86 |
+| 10 | This Little Piggy              | Bounce Patrol        | 5bdTKxLAoos    | 28.00 | 26.16 |
 
-Re-download all tracks: `bash /tmp/liedjes_rhymes/yt_download.sh` (script
-preserved on maxbook). Adjust `trim_start` / `trim_dur` per track in the
-`TRACKS` array to change which 28-second window is used.
+## Re-render pipeline
 
-These are commercial recordings used here for a single child's home tablet.
-Repo is public for telemetry tooling convenience — if redistribution becomes
-a concern, either flip the repo to private (GitHub Pages still works on
-private repos with Pro) or replace with public-domain renditions.
+1. Source wavs live in `/tmp/liedjes_rhymes/yt/NN.wav` on maxbook (kept
+   between runs so Whisper + ffmpeg don't re-download).
+2. `/tmp/liedjes_rhymes/find_verse_bounds.py` reads Whisper word-level
+   transcripts from `/tmp/liedjes_rhymes/whisper/NN.json` and prints
+   `(start, dur)` per track.
+3. `/tmp/liedjes_rhymes/yt_rerender.sh` paste those values into a bash
+   array and renders mp3s into `rhymes/audio/`.
+
+## Notes
+
+- **#04 (Mary Had a Little Lamb, Super Simple Songs)**: SSS version sings
+  the chorus repeatedly (`Mary had a little lamb, little lamb, little
+  lamb…`) instead of the book's school-day narrative verse. The 33-second
+  trim captures the full chorus pattern up to the first natural pause.
+- **#08 (Little Bo-Peep, Super Simple TV)**: this is a *puppet playhouse
+  skit*, not a straight sung rhyme. The 19.5-second trim captures the
+  intro and first two book lines ("has lost her sheep / doesn't know
+  where to find them"). The closing book lines ("Leave them alone…
+  wagging their tails behind them") arrive ~45 s later in the video,
+  embedded in scripted puppet dialogue. Consider swapping to Mother Goose
+  Club (`fjN2qXGFp24`) or The Good and the Beautiful Kids
+  (`vNFCFmPSVVY`) for a straight-through rendition.
+- All 10 are commercial recordings used here on a single child's home
+  tablet. Repo is public for telemetry tooling convenience — if
+  redistribution becomes a concern, either flip the repo to private (GH
+  Pages still works on private repos with Pro) or replace with
+  public-domain renditions.
