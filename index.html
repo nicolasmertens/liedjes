@@ -204,7 +204,17 @@
 // --- Service worker: auto-update HTML on next visit, offline fallback ---
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => schedulePrefetch())
+      .catch(() => {});
+  });
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    const m = e.data || {};
+    if (m.type === "prefetch-progress") {
+      debugLog(`prefetch ${m.done}/${m.total}`);
+    } else if (m.type === "prefetch-done") {
+      debugLog(`prefetch done: ${m.cached}/${m.total} cached`);
+    }
   });
 }
 
@@ -273,6 +283,78 @@ audio.preload = "none";
 audio.playsInline = true;
 let currentTile = null;
 
+// --- Popularity tracking ---
+// Each play is logged with a timestamp. Rolling 14-day window determines
+// the prefetch order. New devices fall back to a seed shipped in popularity.json.
+const POP_KEY = "liedjes_plays_v1";
+const POP_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+let seedOrder = [];
+
+function loadPlays() {
+  try { return JSON.parse(localStorage.getItem(POP_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function savePlays(arr) {
+  try { localStorage.setItem(POP_KEY, JSON.stringify(arr)); } catch {}
+}
+
+function recordPlay(n) {
+  const now = Date.now();
+  const cutoff = now - POP_WINDOW_MS;
+  const arr = loadPlays().filter(e => e.t >= cutoff);
+  arr.push({ n, t: now });
+  savePlays(arr);
+}
+
+function downloadOrder() {
+  const cutoff = Date.now() - POP_WINDOW_MS;
+  const arr = loadPlays().filter(e => e.t >= cutoff);
+  savePlays(arr); // housekeeping: drop expired entries
+
+  const counts = {};
+  for (const e of arr) counts[e.n] = (counts[e.n] || 0) + 1;
+
+  const seedRank = {};
+  seedOrder.forEach((n, i) => { seedRank[n] = i; });
+
+  const all = songs.map(s => s.n);
+  all.sort((a, b) => {
+    const ca = counts[a] || 0, cb = counts[b] || 0;
+    if (cb !== ca) return cb - ca;
+    const sa = seedRank[a] ?? 999, sb = seedRank[b] ?? 999;
+    if (sa !== sb) return sa - sb;
+    return a - b;
+  });
+  return all;
+}
+
+function songByNum(n) { return songs.find(s => s.n === n); }
+
+async function schedulePrefetch() {
+  // Defer to idle so it doesn't fight first paint
+  await new Promise(r => {
+    if ("requestIdleCallback" in window) requestIdleCallback(() => r(), { timeout: 3000 });
+    else setTimeout(r, 1500);
+  });
+  let worker = navigator.serviceWorker.controller;
+  if (!worker) {
+    // First install — controller becomes non-null after activate; wait briefly
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      worker = navigator.serviceWorker.controller || reg.active;
+    } catch {}
+  }
+  if (!worker) return;
+  const order = downloadOrder();
+  const urls = order.map(n => {
+    const s = songByNum(n);
+    return s ? encodeURI(BASE + s.file) : null;
+  }).filter(Boolean);
+  worker.postMessage({ type: "prefetch-mp3s", urls });
+  debugLog(`prefetch order: ${order.join(",")}`);
+}
+
 function setPlaying(tile) {
   if (currentTile && currentTile !== tile) currentTile.classList.remove("playing");
   currentTile = tile;
@@ -289,7 +371,10 @@ function stop() {
 function play(song, tile) {
   if (currentTile === tile) { stop(); return; }
   audio.src = encodeURI(BASE + song.file);
-  audio.play().then(() => setPlaying(tile)).catch(() => setPlaying(null));
+  audio.play().then(() => {
+    setPlaying(tile);
+    recordPlay(song.n);
+  }).catch(() => setPlaying(null));
 }
 
 audio.addEventListener("ended", () => setPlaying(null));
@@ -440,10 +525,14 @@ function build() {
   });
 }
 
-fetch("icons/colors.json")
-  .then(r => r.ok ? r.json() : {})
-  .catch(() => ({}))
-  .then(m => { colorMap = m; build(); });
+Promise.all([
+  fetch("icons/colors.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+  fetch("popularity.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+]).then(([colors, pop]) => {
+  colorMap = colors || {};
+  seedOrder = Array.isArray(pop?.seed) ? pop.seed : [];
+  build();
+});
 
 document.getElementById("stopbtn").addEventListener("click", stop);
 </script>
