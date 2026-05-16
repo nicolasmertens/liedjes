@@ -10,7 +10,7 @@ fade). Verse end is the first inter-segment gap ≥ 1.3 s after at least
 | # | Rhyme                          | Channel              | YouTube ID     | start | dur   |
 |---|--------------------------------|----------------------|----------------|-------|-------|
 | 01 | Twinkle, Twinkle, Little Star  | Super Simple Songs   | yCjJyiqpAuU    | 17.60 | 35.18 |
-| 02 | Hey Diddle Diddle              | Sesame Street        | caRuhprYlOQ    |  0.00 | 18.84 |
+| 02 | Hey Diddle Diddle              | Little Baby Bum      | sJiw-edttDY    | 25.00 | 75.00 |
 | 03 | Hickory Dickory Dock           | Super Simple Songs   | HGgsklW-mtg    |  4.64 | 24.60 |
 | 04 | Mary Had a Little Lamb         | Super Simple Songs   | YE7PiTwhTQk    | 18.14 | 33.40 |
 | 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  8.84 | 14.86 |
