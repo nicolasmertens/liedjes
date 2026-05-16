@@ -12,7 +12,7 @@ fade). Verse end is the first inter-segment gap ≥ 1.3 s after at least
 | 01 | Twinkle, Twinkle, Little Star  | Super Simple Songs   | yCjJyiqpAuU    | 17.60 | 35.18 |
 | 02 | Hey Diddle Diddle              | Little Baby Bum      | sJiw-edttDY    | 25.00 | 75.00 |
 | 03 | Hickory Dickory Dock           | Super Simple Songs   | HGgsklW-mtg    |  4.64 | 24.60 |
-| 04 | Mary Had a Little Lamb         | Super Simple Songs   | YE7PiTwhTQk    | 18.14 | 33.40 |
+| 04 | Mary Had a Little Lamb         | Emma And Joey        | JR40Zr0y7Nw    |  7.00 | 63.00 |
 | 05 | Humpty Dumpty                  | Super Simple Songs   | nrv495corBc    |  8.84 | 14.86 |
 | 06 | The Itsy Bitsy Spider          | Twinkle Little Songs | w_lCi8U49mY    |  2.72 | 22.66 |
 | 07 | Jack and Jill                  | Super Simple Songs   | EFj0K38sPmA    |  6.38 | 18.86 |
@@ -32,10 +32,6 @@ fade). Verse end is the first inter-segment gap ≥ 1.3 s after at least
 
 ## Notes
 
-- **#04 (Mary Had a Little Lamb, Super Simple Songs)**: SSS version sings
-  the chorus repeatedly (`Mary had a little lamb, little lamb, little
-  lamb…`) instead of the book's school-day narrative verse. The 33-second
-  trim captures the full chorus pattern up to the first natural pause.
 - **#08 (Little Bo-Peep, Super Simple TV)**: this is a *puppet playhouse
   skit*, not a straight sung rhyme. The 19.5-second trim captures the
   intro and first two book lines ("has lost her sheep / doesn't know
