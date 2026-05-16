@@ -1,0 +1,7 @@
+name = "liedjes-logger"
+main = "src/index.js"
+compatibility_date = "2025-05-01"
+account_id = "07c300613d24d4ab7d1072c439e4325a"
+
+[observability]
+enabled = true
